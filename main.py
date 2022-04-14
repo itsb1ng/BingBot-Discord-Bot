@@ -16,14 +16,16 @@ import subprocess
 
 client = commands.Bot(command_prefix="bb!")
 slash = SlashCommand(client, sync_commands=True)
+token = os.environ['DISCORD_BOT_TOKEN']
 KEY = os.environ['API_KEY']
 client.remove_command('help')
 
 global pickaxes
 pickaxes = ["BingCoin Pickaxe", "BingCoin Drill", "Miner x1000", "Miner x1050", "Miner x1060", "Miner x1070", "Miner x1080", "NFT x2000", "NFT x2050", "NFT x2060", "NFT x2070", "NFT x2080", "BTH x3000", "BTH x3050", "BTH x3060", "BTH x3070", "BTH x3080", "BTH x3090"]
 global bank_list
-bank_list = ["Default Bank", "Amateur Bank", "Professional Bank", "Elite Bank", "NFT Bank", "BTH Bank", "DGE Bank", "DGE Premium"]
-
+bank_list = ["Default Bank", "Amateur Bank", "Professional Bank", "Elite Bank", "NFT Bank", "BTH Bank", "DGE Bank", "DGE Premium", "SHIB Bank"]
+global heist_list
+heist_list = ["Burj Khalifa", "The Louvre Museum", "Emirates Palace", "SoFi Stadium", "The Great Mosque of Mecca"]
 
 def getInfo(call):
     r = requests.get(call)
@@ -37,8 +39,19 @@ async def on_ready():
 @client.event
 async def on_command_error(ctx,error):
   if isinstance(error, commands.CommandOnCooldown):
-    if error.retry_after >= 86400:
-      msg = f"**Still on cooldown**, please try again in {error.retry_after/86400:.2f}hr"
+    if error.retry_after >= 3600:
+      msg = f"**Still on cooldown**, please try again in {error.retry_after/3600:.2f}hr"
+    elif error.retry_after >= 60:
+      msg = f"**Still on cooldown**, please try again in {error.retry_after/60:.2f}min"
+    else:
+      msg = f"**Still on cooldown**, please try again in {error.retry_after:.2f}s"
+    await ctx.reply(msg)
+
+@client.event
+async def on_application_command_error(ctx,error):
+  if isinstance(error, commands.CommandOnCooldown):
+    if error.retry_after >= 3600:
+      msg = f"**Still on cooldown**, please try again in {error.retry_after/3600:.2f}hr"
     elif error.retry_after >= 60:
       msg = f"**Still on cooldown**, please try again in {error.retry_after/60:.2f}min"
     else:
@@ -63,14 +76,14 @@ async def on_message(message):
     await client.process_commands(message)
   
 @client.command()
-async def help(ctx, arg="none"):
-  if arg == "none":
+async def help(ctx, *, arg=None):
+  if arg is None:
     embed = discord.Embed(title="Help Categories", color=0xC98FFC)
     embed.add_field(name="bb!help admin", value="Admin Commands", inline=False)
     embed.add_field(name="bb!help hypixel", value="Hypixel Commands", inline=False)
     embed.add_field(name="bb!help skyblock", value="Hypixel Skyblock Commands", inline=False)
     embed.add_field(name="bb!help fun", value="Random BingBot Commands", inline=False)
-    embed.add_field(name="bb!help economy", value="BingCoin Economy Commands", inline=False)
+    embed.add_field(name="bb!help economy 1/2/3", value="BingCoin Economy Commands", inline=False)
     embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
     embed.set_thumbnail(url=ctx.guild.icon_url)
   elif arg == "admin":
@@ -124,8 +137,8 @@ async def help(ctx, arg="none"):
     embed.add_field(name="bb!plancke (IGN)", value="Gets a user's Plancke link", inline=False)
     embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
     embed.set_thumbnail(url=ctx.guild.icon_url)
-  elif arg == "economy":
-    embed = discord.Embed(title="BingCoin Economy Commands", color=0xC98FFC)
+  elif arg == "economy" or arg == "economy 1":
+    embed = discord.Embed(title="BingCoin Economy Commands Page 1", color=0xC98FFC)
     embed.add_field(name="bb!startmining", value="Starts your mining journey", inline=False)
     embed.add_field(name="bb!balance/bal (@USER)", value="Checks balance of another user if @ or yourself without @USER parameter", inline=False)
     embed.add_field(name="bb!networth/worth/nw/nworth (@USER)", value="Checks networth of another user if @ or yourself without @USER parameter", inline=False)
@@ -134,14 +147,27 @@ async def help(ctx, arg="none"):
     embed.add_field(name="bb!shop", value="View all available items for sale", inline=False)
     embed.add_field(name="bb!buy (PICKAXE)", value="Purchases the desired pickaxe", inline=False)
     embed.add_field(name="bb!leaderboard", value="Check BingCoin leaderboard", inline=False)
+    embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+    embed.set_thumbnail(url=ctx.guild.icon_url)
+  elif arg == "economy 2":
+    embed = discord.Embed(title="BingCoin Economy Commands Page 2", color=0xC98FFC)
     embed.add_field(name="bb!bank (@USER)", value="Checks bank of another user if @ or yourself without @USER parameter", inline=False)
     embed.add_field(name="bb!banks", value="Views all available banks", inline=False)
     embed.add_field(name="bb!deposit", value="Deposit BingCoin to your bank", inline=False)
     embed.add_field(name="bb!withdraw", value="Withdraw BingCoin to your bank", inline=False)
-    embed.add_field(name="bb!apply (BANK)", value="Puchase a bank to store your BingCoin", inline=False)
+    embed.add_field(name="bb!buybank (BANK)", value="Puchase a bank to store your BingCoin", inline=False)
     embed.add_field(name="bb!rob (@USER)", value="Rob a user of their BingCoin in their wallet", inline=False)
     embed.add_field(name="bb!ranks (@USER)", value="View all available ranks", inline=False)
     embed.add_field(name="bb!rank (@USER)", value="Checks rank of another user if @ or yourself without @USER parameter", inline=False)
+    embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+    embed.set_thumbnail(url=ctx.guild.icon_url)
+  elif arg == "economy 3":
+    embed = discord.Embed(title="BingCoin Economy Commands Page 3", color=0xC98FFC)
+    embed.add_field(name="bb!interest", value="Collect interest from whatever is in your bank", inline=False)
+    embed.add_field(name="/coinflip (AMOUNT) (HEADS/TAILS)", value="Gamble all your coins away", inline=False)
+    embed.add_field(name="bb!heists", value="View all purchasable heists", inline=False)
+    embed.add_field(name="bb!buyheist (HEIST)", value="Buy a specific heist", inline=False)
+    embed.add_field(name="bb!buyrank (RANK)", value="Buy a BingCoin Rank", inline=False)
     embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
     embed.set_thumbnail(url=ctx.guild.icon_url)
   else:
@@ -1269,7 +1295,6 @@ async def geolocate(ctx, IP):
 
 @slash.slash(
   description="View a user's profile information",
-  guild_ids=[945030771410878495, 931682862581841940, 925930297789415554, 934362614572650517, 963211165763252354],
   options = [
     create_option(
       name="id",
@@ -1406,23 +1431,23 @@ async def mine(ctx):
       min = 50
       coin_num = 66
     elif data[user_num]['current_pick'] == "BTH x3000": 
-      min = 150
-      coin_num = 165
+      min = 200
+      coin_num = 240
     elif data[user_num]['current_pick'] == "BTH x3050": 
-      min = 170
-      coin_num = 185
+      min = 270
+      coin_num = 320
     elif data[user_num]['current_pick'] == "BTH x3060": 
-      min = 185
-      coin_num = 200
+      min = 330
+      coin_num = 400
     elif data[user_num]['current_pick'] == "BTH x3070": 
-      min = 210
-      coin_num = 230
+      min = 420
+      coin_num = 470
     elif data[user_num]['current_pick'] == "BTH x3080": 
-      min = 240
-      coin_num = 270
+      min = 500
+      coin_num = 570
     elif data[user_num]['current_pick'] == "BTH x3090": 
-      min = 280
-      coin_num = 310
+      min = 590
+      coin_num = 680
     
 
     if rank_ == "Default":
@@ -1515,7 +1540,7 @@ async def pickaxe(ctx, user:discord.Member=None):
 async def shop(ctx):
   embed = discord.Embed(title="BingCoin Shop", description="Coins must be in wallet to make purchases", color=0xC98FFC)
   embed.add_field(name="Pickaxes:", value=f"{pickaxes[0]}: Free\n{pickaxes[1]}: 〶20\n\n{pickaxes[2]}: 〶75\n{pickaxes[3]}: 〶150\n{pickaxes[4]}: 〶300\n{pickaxes[5]}: 〶500\n{pickaxes[6]}: 〶750\n\n{pickaxes[7]}: 〶1,250\n{pickaxes[8]}: 〶1,900\n{pickaxes[9]}: 〶2,900\n{pickaxes[10]}: 〶4,000\n{pickaxes[11]}: 〶7,500\n\n{pickaxes[12]}: 〶20,000\n{pickaxes[13]}: 〶30,000\n{pickaxes[14]}: 〶43,000\n{pickaxes[15]}: 〶57,000\n{pickaxes[16]}: 〶74,000\n{pickaxes[17]}: 〶94,000", inline=True)
-  embed.add_field(name="Banks:", value=f"{bank_list[0]}: Free\n{bank_list[1]}: 〶450\n{bank_list[2]}: 〶1,200\n{bank_list[3]}: 〶3,000\n{bank_list[4]}: 〶7,500\n{bank_list[5]}: 〶18,000\n{bank_list[6]}: 〶37,000\n{bank_list[7]}: 〶57,000", inline=True)
+  embed.add_field(name="Banks:", value=f"{bank_list[0]}: Free\n{bank_list[1]}: 〶450\n{bank_list[2]}: 〶1,200\n{bank_list[3]}: 〶3,000\n{bank_list[4]}: 〶7,500\n{bank_list[5]}: 〶18,000\n{bank_list[6]}: 〶37,000\n{bank_list[7]}: 〶57,000\n{bank_list[8]}: 〶140,000", inline=True)
   embed.add_field(name="Donations:", value="Paypal: itsb1ng611@gmail.com", inline=False)
   embed.set_footer(text="Developed by bing#0001", icon_url="https://i.imgur.com/9ZTBdOK.png")
   await ctx.send(embed=embed)
@@ -1704,17 +1729,17 @@ async def leaderboard(ctx):
   
   for x in range(len(data)):
     value1 = int(data[x]['coin']) + int(data[x]['spent']) + int(data[x]['bank'][0])
-    if int(value1) > first[1]:
+    if (int(value1) > first[1]) and (data[x]['id'] != 360456839495680000):
       first = (data[x]["name"], int(value1))
 
   for x in range(len(data)):
     value2 = int(data[x]['coin']) + int(data[x]['spent']) + int(data[x]['bank'][0])
-    if (int(value2) > second[1]) and (int(value2) < first[1]):
+    if (int(value2) > second[1]) and (int(value2) < first[1]) and (data[x]['id'] != 360456839495680000):
       second = (data[x]['name'], int(value2))
 
   for x in range(len(data)):
     value3 = int(data[x]['coin']) + int(data[x]['spent']) + int(data[x]['bank'][0])
-    if (int(value3) > third[1]) and (int(value3) < second[1]):
+    if (int(value3) > third[1]) and (int(value3) < second[1]) and (data[x]['id'] != 360456839495680000):
       third = (data[x]['name'], int(value3))
 
   await ctx.send(f"〶      BingCoin Leaderboard:      〶\n\n1. {first[0]}: 〶{first[1]:,}\n2. {second[0]}: 〶{second[1]:,}\n3. {third[0]}: 〶{third[1]:,}")
@@ -1747,6 +1772,8 @@ async def deposit(ctx, amount="all"):
         max = 50000
       elif data[user_num]['bank'][1] == bank_list[7]:
         max = 80000
+      elif data[user_num]['bank'][1] == bank_list[8]:
+        max = 180000
 
       attempt_depo = data[user_num]['bank'][0] + data[user_num]['coin']
       coin_ = data[user_num]['coin']
@@ -1787,6 +1814,8 @@ async def deposit(ctx, amount="all"):
         max = 50000
       elif data[user_num]['bank'][1] == bank_list[7]:
         max = 80000
+      elif data[user_num]['bank'][1] == bank_list[8]:
+        max = 180000
         
       attempt_depo = data[user_num]['bank'][0] + int(amount)
       if max == data[user_num]['bank'][0]:
@@ -1873,7 +1902,7 @@ async def bank(ctx, user:discord.Member=None):
     await ctx.send("You do not have a mining setup yet please try 'bb!startmining'")
 
 @client.command()
-async def apply(ctx, *, bank_application):
+async def buybank(ctx, *, bank_application):
   with open("economy.json", "r") as f:
     data = json.load(f)
 
@@ -1951,6 +1980,15 @@ async def apply(ctx, *, bank_application):
       with open('economy.json', 'w') as outfile:
         outfile.write(json.dumps(data))
       await ctx.send(f"You have purchased {bank_application} for 〶57,000")
+    elif (bank_num == 8) and (current_bank_num < bank_num) and (data[user_num]['coin'] >= 140000):
+      new_coins = data[user_num]['coin'] - 140000
+      spend = data[user_num]['spent'] + 140000
+      outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[user_num]['bank'][0], bank_application], "spent": spend, "current_pick": data[user_num]['current_pick']}
+      data.pop(user_num)
+      data.append(outdata)
+      with open('economy.json', 'w') as outfile:
+        outfile.write(json.dumps(data))
+      await ctx.send(f"You have purchased {bank_application} for 〶140,000")
     else:
       await ctx.send(f"Could not purchase {bank_application}")
     
@@ -2021,14 +2059,15 @@ async def rob(ctx, user:discord.Member):
 @client.command()
 async def banks(ctx):
   embed=discord.Embed(title="Available Banks", color=0xC98FFC)
-  embed.add_field(name="DGE Premium", value="Cost: 〶57,000\nCapacity: 〶80,000", inline=False)
-  embed.add_field(name="DGE Bank", value="Cost: 〶37,000\nCapacity: 〶50,000", inline=False)
-  embed.add_field(name="BTH Bank", value="Cost: 〶18,000\nCapacity: 〶27,500", inline=False)
-  embed.add_field(name="NFT Bank", value="Cost: 〶7,500\nCapacity: 〶10,000", inline=False)
-  embed.add_field(name="Elite Bank", value="Cost: 〶3,000\nCapacity: 〶3,500", inline=False)
-  embed.add_field(name="Professional Bank", value="Cost: 〶1,200\nCapacity: 〶1,500", inline=False)
-  embed.add_field(name="Amateur Bank", value="Cost: 〶450\nCapacity: 〶600", inline=False)
-  embed.add_field(name="Default Bank", value="Cost: 〶Free\nCapacity: 〶100", inline=False)
+  embed.add_field(name="SHIB Bank", value="Cost: 〶140,000\nCapacity: 〶180,000", inline=True)
+  embed.add_field(name="DGE Premium", value="Cost: 〶57,000\nCapacity: 〶80,000", inline=True)
+  embed.add_field(name="DGE Bank", value="Cost: 〶37,000\nCapacity: 〶50,000", inline=True)
+  embed.add_field(name="BTH Bank", value="Cost: 〶18,000\nCapacity: 〶27,500", inline=True)
+  embed.add_field(name="NFT Bank", value="Cost: 〶7,500\nCapacity: 〶10,000", inline=True)
+  embed.add_field(name="Elite Bank", value="Cost: 〶3,000\nCapacity: 〶3,500", inline=True)
+  embed.add_field(name="Professional Bank", value="Cost: 〶1,200\nCapacity: 〶1,500", inline=True)
+  embed.add_field(name="Amateur Bank", value="Cost: 〶450\nCapacity: 〶600", inline=True)
+  embed.add_field(name="Default Bank", value="Cost: 〶Free\nCapacity: 〶100", inline=True)
   embed.set_footer(text="Developed by bing#0001", icon_url="https://i.imgur.com/9ZTBdOK.png")
   await ctx.send(embed=embed)
 
@@ -2116,7 +2155,6 @@ async def interest(ctx):
 
 @slash.slash(
   description="Coinflip the AI",
-  guild_ids=[945030771410878495, 931682862581841940, 925930297789415554, 934362614572650517, 963211165763252354],
   options = [
     create_option(
       name="amount",
@@ -2132,6 +2170,7 @@ async def interest(ctx):
     )
   ]
 )
+@commands.cooldown(1, 5, commands.BucketType.user)
 async def coinflip(ctx, amount, choice):
   try:
     with open("economy.json", "r") as f:
@@ -2173,7 +2212,362 @@ async def coinflip(ctx, amount, choice):
     else:  
       await ctx.reply(f"You do not have enough BingCoin to coinflip. Check wallet balance")
   except:
-    await ctx.send("You cannot coinflip try 'bb!startmining'")      
+    await ctx.send("You cannot coinflip try 'bb!startmining'")
+
+@client.command()
+async def heists(ctx):
+  embed = discord.Embed(title="BingCoin Heists", color=0xC98FFC)
+  embed.add_field(name="The Great Mosque of Mecca", value="Cost: 〶100,000 BingCoin", inline=False)
+  embed.add_field(name="SoFi Stadium", value="Cost: 〶50,000 BingCoin", inline=False)
+  embed.add_field(name="Emirates Palace", value="Cost: 〶30,000", inline=False)
+  embed.add_field(name="The Louvre Museum", value="Cost: 〶15,000 BingCoin", inline=False)
+  embed.add_field(name="Burj Khalifa", value="Cost: 〶5,000 BingCoin", inline=False)
+  await ctx.send(embed=embed)
+  
+@client.command()
+async def buyheist(ctx, *, heist):
+  try:
+    user_num = -1
+    with open("heists.json", "r") as heistfile:
+      heistjson = json.load(heistfile)
+    with open("economy.json", "r") as f:
+      data = json.load(f)
+    for y in range(len(data)):
+        if data[y]["id"] == ctx.author.id:
+          data_user_num = y
+    for h in range(len(heistjson)):
+      if heistjson[h]['id'] == ctx.author.id:
+        user_num = h
+    if heist in heist_list:
+      for x in range(len(heist_list)):
+        if heist_list[x] == heist:
+          heist_num = x
+      if user_num != -1:
+        for z in range(len(heist_list)):
+          if heist_list[z] == heistjson[user_num]["heist"]:
+            current_heist_num = z
+
+        if (heist_num == 1) and (current_heist_num < heist_num) and (data[data_user_num]['coin'] >= 15000):
+          new_coins = data[data_user_num]['coin'] - 15000
+          spend = data[data_user_num]['coin'] + 15000
+          outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[data_user_num]['bank'][0], data[data_user_num]['bank'][1]], "spent": spend, "current_pick": data[data_user_num]['current_pick']}
+          data.pop(data_user_num)
+          data.append(outdata)
+          with open('economy.json', 'w') as out:
+            out.write(json.dumps(data))
+
+          heist_out = {"id": ctx.author.id, "heist": heist_list[1]}
+          heistjson.pop(user_num)
+          heistjson.append(heist_out)
+          with open('heists.json', 'w') as outheist:
+            outheist.write(json.dumps(heistjson))
+
+          await ctx.send(f"{ctx.author} has bought {heist_list[1]} for 〶15,000 BingCoin")
+
+        elif (heist_num == 2) and (current_heist_num < heist_num) and (data[data_user_num]['coin'] >= 30000):
+          new_coins = data[data_user_num]['coin'] - 30000
+          spend = data[data_user_num]['coin'] + 30000
+          outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[data_user_num]['bank'][0], data[data_user_num]['bank'][1]], "spent": spend, "current_pick": data[data_user_num]['current_pick']}
+          data.pop(data_user_num)
+          data.append(outdata)
+          with open('economy.json', 'w') as out:
+            out.write(json.dumps(data))
+
+          heist_out = {"id": ctx.author.id, "heist": heist_list[2]}
+          heistjson.pop(user_num)
+          heistjson.append(heist_out)
+          with open('heists.json', 'w') as outheist:
+            outheist.write(json.dumps(heistjson))
+
+          await ctx.send(f"{ctx.author} has bought {heist_list[2]} for 〶30,000 BingCoin")
+
+        elif (heist_num == 3) and (current_heist_num < heist_num) and (data[data_user_num]['coin'] >= 50000):
+          new_coins = data[data_user_num]['coin'] - 50000
+          spend = data[data_user_num]['coin'] + 50000
+          outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[data_user_num]['bank'][0], data[data_user_num]['bank'][1]], "spent": spend, "current_pick": data[data_user_num]['current_pick']}
+          data.pop(data_user_num)
+          data.append(outdata)
+          with open('economy.json', 'w') as out:
+            out.write(json.dumps(data))
+
+          heist_out = {"id": ctx.author.id, "heist": heist_list[3]}
+          heistjson.pop(user_num)
+          heistjson.append(heist_out)
+          with open('heists.json', 'w') as outheist:
+            outheist.write(json.dumps(heistjson))
+
+          await ctx.send(f"{ctx.author} has bought {heist_list[3]} for 〶50,000 BingCoin")
+
+        elif (heist_num == 4) and (current_heist_num < heist_num) and (data[data_user_num]['coin'] >= 100000):
+          new_coins = data[data_user_num]['coin'] - 100000
+          spend = data[data_user_num]['coin'] + 100000
+          outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[data_user_num]['bank'][0], data[data_user_num]['bank'][1]], "spent": spend, "current_pick": data[data_user_num]['current_pick']}
+          data.pop(data_user_num)
+          data.append(outdata)
+          with open('economy.json', 'w') as out:
+            out.write(json.dumps(data))
+
+          heist_out = {"id": ctx.author.id, "heist": heist_list[4]}
+          heistjson.pop(user_num)
+          heistjson.append(heist_out)
+          with open('heists.json', 'w') as outheist:
+            outheist.write(json.dumps(heistjson))
+
+          await ctx.send(f"{ctx.author} has bought {heist_list[4]} for 〶100,000 BingCoin")
+
+        else:
+          await ctx.reply(f"Could not purchase {heist}")
+      else:
+        if (heist_num == 0) and (data[data_user_num]['coin'] >= 5000):
+          new_coins = data[data_user_num]['coin'] - 5000
+          spend = data[data_user_num]['coin'] + 5000
+          outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[data_user_num]['bank'][0], data[data_user_num]['bank'][1]], "spent": spend, "current_pick": data[data_user_num]['current_pick']}
+          data.pop(data_user_num)
+          data.append(outdata)
+          with open('economy.json', 'w') as out:
+            out.write(json.dumps(data))
+
+          heist_out = {"id": ctx.author.id, "heist": heist_list[0]}
+          heistjson.append(heist_out)
+          with open('heists.json', 'w') as outheist:
+            outheist.write(json.dumps(heistjson))
+
+          await ctx.send(f"{ctx.author} has bought {heist[0]} for 〶5,000 BingCoin")
+
+        elif (heist_num == 1) and (data[data_user_num]['coin'] >= 15000):
+          new_coins = data[data_user_num]['coin'] - 15000
+          spend = data[data_user_num]['coin'] + 15000
+          outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[user_num]['bank'][0], data[user_num]['bank'][1]], "spent": spend, "current_pick": data[user_num]['current_pick']}
+          data.pop(data_user_num)
+          data.append(outdata)
+          with open('economy.json', 'w') as out:
+            out.write(json.dumps(data))
+
+          heist_out = {"id": ctx.author.id, "heist": heist_list[1]}
+          heistjson.append(heist_out)
+          with open('heists.json', 'w') as outheist:
+            outheist.write(json.dumps(heistjson))
+
+          await ctx.send(f"{ctx.author} has bought {heist_list[1]} for 〶15,000 BingCoin")
+
+        elif (heist_num == 2) and (data[data_user_num]['coin'] >= 30000):
+          new_coins = data[data_user_num]['coin'] - 30000
+          spend = data[data_user_num]['coin'] + 30000
+          outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[data_user_num]['bank'][0], data[data_user_num]['bank'][1]], "spent": spend, "current_pick": data[data_user_num]['current_pick']}
+          data.pop(data_user_num)
+          data.append(outdata)
+          with open('economy.json', 'w') as out:
+            out.write(json.dumps(data))
+
+          heist_out = {"id": ctx.author.id, "heist": heist_list[2]}
+          heistjson.append(heist_out)
+          with open('heists.json', 'w') as outheist:
+            outheist.write(json.dumps(heistjson))
+
+          await ctx.send(f"{ctx.author} has bought {heist_list[2]} for 〶30,000 BingCoin")
+
+        elif (heist_num == 3) and (data[data_user_num]['coin'] >= 50000):
+          new_coins = data[data_user_num]['coin'] - 50000
+          spend = data[data_user_num]['coin'] + 50000
+          outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[data_user_num]['bank'][0], data[data_user_num]['bank'][1]], "spent": spend, "current_pick": data[data_user_num]['current_pick']}
+          data.pop(data_user_num)
+          data.append(outdata)
+          with open('economy.json', 'w') as out:
+            out.write(json.dumps(data))
+
+          heist_out = {"id": ctx.author.id, "heist": heist_list[3]}
+          heistjson.append(heist_out)
+          with open('heists.json', 'w') as outheist:
+            outheist.write(json.dumps(heistjson))
+
+          await ctx.send(f"{ctx.author} has bought {heist_list[3]} for 〶50,000 BingCoin")
+
+        elif (heist_num == 4) and (data[data_user_num]['coin'] >= 100000):
+          new_coins = data[data_user_num]['coin'] - 100000
+          spend = data[data_user_num]['coin'] + 100000
+          outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[data_user_num]['bank'][0], data[data_user_num]['bank'][1]], "spent": spend, "current_pick": data[data_user_num]['current_pick']}
+          data.pop(data_user_num)
+          data.append(outdata)
+          with open('economy.json', 'w') as out:
+            out.write(json.dumps(data))
+
+          heist_out = {"id": ctx.author.id, "heist": heist_list[4]}
+          heistjson.append(heist_out)
+          with open('heists.json', 'w') as outheist:
+            outheist.write(json.dumps(heistjson))
+
+          await ctx.send(f"{ctx.author} has bought {heist_list[4]} for 〶100,000 BingCoin")
+          
+        else:
+          await ctx.reply(f"Could not purchase {heist}")
+    else:
+      await ctx.reply(f"{heist} is not a valid heist")
     
+  except:
+    await ctx.send("You cannot buy a heist try 'bb!startmining'")
+      
+@slash.slash(
+  description="Conduct a heist",
+  options = [
+    create_option(
+      name="partner",
+      description="Partner to split you earnings",
+      required=True,
+      option_type=6
+    )
+  ]
+)
+@commands.cooldown(1, 21600, commands.BucketType.user)
+async def heist(ctx:SlashContext, partner:discord.Member):
+  try:
+    with open("economy.json", "r") as f:
+      data = json.load(f)
+    rank_ = "Default"
+    with open("premium.json", "r") as premfile:
+      premium = json.load(premfile)
+    def return_key(val):
+      key_list=list(premium[0].keys())
+      val_list=list(premium[0].values())
+      for i in range(len(premium[0])):
+        if val_list[i]==val:
+          return key_list[i]
+      return("Key Not Found")
+    for p in premium[0]:
+      for i in range(len(premium[0][p])):
+        if ctx.author.id == premium[0][p][i]:
+          rank_ = return_key(premium[0][p])
+
+    with open("premium.json", "r") as premfile:
+      premium = json.load(premfile)
+
+    chance = random.randint(1,100)
+    failure = False
+
+    with open("heists.json", "r") as heistfile:
+      heist_json = json.load(heistfile)
+
+    for hx in range(len(heist_json)):
+      if heist_json[hx]['id'] == ctx.author.id:
+        heist_user_num = hx
+    for hy in range(len(heist_json)):
+      if heist_json[hy]['id'] == partner.id:
+        heist_partner_num = hy
+        
+    if (heist_user_num == 0) or (heist_user_num-1 == heist_partner_num) or (heist_user_num+1 == heist_partner_num) or (heist_user_num == heist_partner_num):
+      if heist_json[heist_user_num]['heist'] == "Burj Khalifa":
+        income = random.randint(1500,2500)
+      elif heist_json[heist_user_num]['heist'] == "The Louvre Museum":
+        income = random.randint(8000,11000)
+      elif heist_json[heist_user_num]['heist'] == "Emirates Palace":
+        income = random.randint(17000,23000)
+      elif heist_json[heist_user_num]['heist'] == "SoFi Stadium":
+        income = random.randint(30000,35000)
+      elif heist_json[heist_user_num]['heist'] == "The Great Mosque of Mecca":
+        income = random.randint(50000,65000)
+        
+      if rank_ == "Script Kitty":
+        income_float = income + (income*0.10)
+      elif rank_ == "Bitcoin Screenshotter":
+        income_float = income + (income*0.15)
+      elif rank_ == "NFT Miner":
+        income_float = income + (income*0.20)
+      income = income_float //2
+
+      
+      if rank_ == "Default" and chance <= 20:
+        failure = True
+      elif rank_ == "Script Kitty" and chance <= 18:
+        failure = True
+      elif rank_ == "Bitcoin Screenshotter" and chance <= 16:
+        failure = True
+      elif rank_ == "NFT Miner" and chance <= 14:
+        failure = True
+      
+      if failure is True:
+        for x in range(len(data)):
+          if data[x]["id"] == ctx.author.id:
+            user_num = x
+        new_bank = data[user_num]['bank'][0] - income
+        outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": data[user_num]['coin'], "bank": [int(new_bank), data[user_num]['bank'][1]], "spent": data[user_num]['spent'], "current_pick": data[user_num]['current_pick']}
+        data.pop(user_num)
+        data.append(outdata)
+        with open('economy.json', 'w') as out:
+          out.write(json.dumps(data))
+
+        for y in range(len(data)):
+          if data[y]["id"] == partner.id:
+            partner_num = y
+        new_bank_partner = data[partner_num]['bank'][0] - income
+        partner_outdata = {"id": partner.id, "name": str(partner), "coin": data[user_num]['coin'], "bank": [int(new_bank_partner), data[partner_num]['bank'][1]], "spent": data[partner_num]['spent'], "current_pick": data[partner_num]['current_pick']}
+        data.pop(partner_num)
+        data.append(partner_outdata)
+        with open('economy.json', 'w') as out:
+          out.write(json.dumps(data))
+
+      else:
+        for x in range(len(data)):
+          if data[x]["id"] == ctx.author.id:
+            user_num = x
+        new_coins = data[user_num]['coin'] + income
+        outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[user_num]['bank'][0], data[user_num]['bank'][1]], "spent": data[user_num]['spent'], "current_pick": data[user_num]['current_pick']}
+        data.pop(user_num)
+        data.append(outdata)
+        with open('economy.json', 'w') as out:
+          out.write(json.dumps(data))
+
+        for y in range(len(data)):
+          if data[y]["id"] == partner.id:
+            partner_num = y
+        partner_new_coins = data[partner_num]['coin'] + income
+        partner_outdata = {"id": partner.id, "name": str(partner), "coin": partner_new_coins, "bank": [data[partner_num]['bank'][0], data[partner_num]['bank'][1]], "spent": data[partner_num]['spent'], "current_pick": data[partner_num]['current_pick']}
+        data.pop(partner_num)
+        data.append(partner_outdata)
+        with open('economy.json', 'w') as out:
+          out.write(json.dumps(data))
+
+        await ctx.reply(f"{ctx.author.mention} and {partner.mention} have succesfully completed *{heist_json[heist_user_num]['heist']}* and received **〶{int(income):,} BingCoin** each")
+    else:
+      await ctx.reply(f"You cannot execute a heist with {partner}")
+  except:
+    await ctx.send("You cannot commit a heist try 'bb!startmining'")
+
+@client.command()
+async def buyrank(ctx, *, rank):
+  try:
+    with open("economy.json", "r") as f:
+       data = json.load(f)
+    for x in range(len(data)):
+      if data[x]["id"] == ctx.author.id:
+        user_num = x
+
+    with open("premium.json", "r") as premfile:
+      prem = json.load(premfile)
+
+    if rank == "Script Kitty" and data[user_num]['coin'] >= 5000:
+      new_coins = data[user_num]['coin'] - 5000
+      spend = data[user_num]['spent'] + 5000
+      outdata = {"id": ctx.author.id, "name": str(ctx.author), "coin": new_coins, "bank": [data[user_num]['bank'][0], data[user_num]['bank'][1]], "spent": spend, "current_pick": data[user_num]['current_pick']}
+      data.pop(user_num)
+      data.append(outdata)
+      with open('economy.json', 'w') as out:
+        out.write(json.dumps(data))
+
+      prem[0]['Script Kitty'].append(ctx.author.id)
+      with open('premium.json', 'w') as outprem:
+        outprem.write(json.dumps(prem))
+
+      await ctx.send(f"{ctx.author} has bought the rank **Script Kitty** for 〶5,000 BingCoin")
+    elif rank == "Bitcoin Screenshotter":
+      embed = discord.Embed(title="Bitcoin Screenshotter", url="https://www.paypal.com/myaccount/transfer/homepage/preview", color=0xC98FFC)
+      embed.add_field(name="Payment: $5 Friends and Family -> itsb1ng611@gmail.com", value="With note: (Your Discord ID) + Bitcoin Screenshotter")
+      await ctx.send(embed=embed)
+    elif rank == "NFT Miner":
+      embed = discord.Embed(title="NFT Miner", url="https://www.paypal.com/myaccount/transfer/homepage/preview", color=0xC98FFC)
+      embed.add_field(name="Payment: $10 Friends and Family -> itsb1ng611@gmail.com", value="With note: (Your Discord ID) + NFT Miner")
+      await ctx.send(embed=embed)
+    else:
+      await ctx.send(f"**{rank}** is not a valid rank")
+  except:
+    await ctx.send("You cannot buy a rank try 'bb!startmining'")
 keep_alive.keep_alive()
 client.run(token)
