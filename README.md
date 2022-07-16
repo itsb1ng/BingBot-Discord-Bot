@@ -1,9 +1,9 @@
 # BingBot Discord-Bot
 Discord bot that conducts Hypixel API and Economy System
 
-https://discord.com/api/oauth2/authorize?client_id=541682385151066112&permissions=8&scope=bot%20applications.commands
+https://discord.com/oauth2/authorize?client_id=997670054181208125&permissions=8&scope=bot%20applications.commands
 
-BingBot Official Discord: https://discord.gg/d6TB9xUBgj
+BingBot Official Discord: https://discord.gg/5VKkhgHUyS
 
 
 # Accessibility to Slash Commands and Economy System
